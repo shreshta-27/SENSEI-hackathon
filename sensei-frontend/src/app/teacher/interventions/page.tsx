@@ -139,9 +139,6 @@ export default function InterventionsPage() {
           <p className="font-handwrite text-xl text-[var(--text-muted)]">Track and manage student support plans</p>
         </div>
         <div className="flex items-center gap-2">
-          <ComicButton variant="ghost" onClick={fetchInterventions} icon={<RefreshCw size={14} />}>
-            Sync
-          </ComicButton>
           <ComicButton variant="primary" onClick={() => setShowModal(true)} icon={<Plus size={16} />}>
             + Create
           </ComicButton>
