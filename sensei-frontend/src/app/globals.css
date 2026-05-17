@@ -1233,10 +1233,9 @@ body {
 }
 
 .adm-nav-tooltip {
-  position: absolute;
-  right: calc(100% + 14px);
-  top: 50%;
-  transform: translateY(-50%) translateX(8px) scale(0.9);
+  position: fixed;
+  right: 90px;
+  transform: translateX(8px) scale(0.9);
   background: linear-gradient(135deg, var(--adm-accent, #7C3AED) 0%, #A78BFA 100%);
   color: #fff;
   font-size: 0.75rem;
@@ -1265,7 +1264,7 @@ body {
 
 .adm-nav-tooltip-wrap:hover .adm-nav-tooltip {
   opacity: 1;
-  transform: translateY(-50%) translateX(0) scale(1);
+  transform: translateX(0) scale(1);
 }
 
 .adm-nav-tooltip-danger {

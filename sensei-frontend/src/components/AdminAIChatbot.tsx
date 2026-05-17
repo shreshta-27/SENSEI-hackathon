@@ -114,20 +114,20 @@ export default function AdminAIChatbot() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-20 md:bottom-6 right-[90px] md:right-[100px] z-50 p-4 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-20 md:bottom-6 left-6 md:left-8 z-50 p-4 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'hidden' : 'flex'}`}
         style={{ background: 'linear-gradient(135deg, var(--adm-accent), #A78BFA)', color: 'white' }}
       >
         <Bot size={28} />
       </motion.button>
 
-      {}
+      {/* Chat window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-20 md:bottom-6 right-[90px] md:right-[100px] z-50 w-[calc(100vw-6rem)] md:w-[400px] h-[600px] max-h-[75vh] md:max-h-[80vh] border rounded-2xl shadow-2xl flex flex-col overflow-hidden flex-shrink-0"
+            className="fixed bottom-20 md:bottom-6 left-6 md:left-8 z-50 w-[calc(100vw-6rem)] md:w-[400px] h-[600px] max-h-[75vh] md:max-h-[80vh] border rounded-2xl shadow-2xl flex flex-col overflow-hidden flex-shrink-0"
             style={{ background: 'var(--adm-surface)', borderColor: 'rgba(124,58,237,0.15)', fontFamily: 'Inter, sans-serif' }}
           >
             {}

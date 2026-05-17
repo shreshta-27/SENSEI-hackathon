@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
@@ -49,8 +50,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, logout } = useAuthStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dateStr, setDateStr] = useState('');
-  const [notifOpen, setNotifOpen] = useState(true);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [alerts, setAlerts] = useState(NOTIFICATIONS);
+  const [activeTooltip, setActiveTooltip] = useState<{ label: string; top: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -98,7 +101,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="flex items-center justify-center pt-5 pb-3 flex-shrink-0"
           style={{ borderBottom: '1px solid rgba(124,58,237,0.1)' }}
         >
-          <Link href="/admin/settings" className="adm-nav-tooltip-wrap">
+          <Link 
+            href="/admin/settings" 
+            className="adm-nav-tooltip-wrap"
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setActiveTooltip({ label: user.name || 'Profile', top: rect.top + rect.height / 2 });
+            }}
+            onMouseLeave={() => setActiveTooltip(null)}
+          >
             <div
               className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold shadow-sm text-sm transition-all duration-200 hover:ring-2 hover:ring-purple-400 hover:ring-offset-2 adm-nav-avatar ${pathname === '/admin/settings' ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`}
               style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #C084FC 100%)' }}
@@ -110,7 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* ── Nav ── */}
-        <nav className="flex-1 overflow-visible py-3 px-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto adm-scrollbar py-3 px-2 space-y-0.5">
           {NAV_ITEMS.map((n) => {
             const active = isActive(n.href);
             return (
@@ -125,9 +136,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }}
                 onMouseEnter={(e) => {
                   if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)';
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setActiveTooltip({ label: n.label, top: rect.top + rect.height / 2 });
                 }}
                 onMouseLeave={(e) => {
                   if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  setActiveTooltip(null);
                 }}
               >
                 {/* Active indicator */}
@@ -147,8 +161,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     style={{ color: active ? 'var(--adm-accent)' : 'var(--adm-text-muted)' }}
                   />
                 </div>
-                {/* Tooltip (CSS-only, left side) */}
-                <span className="adm-nav-tooltip">{n.label}</span>
               </Link>
             );
           })}
@@ -163,8 +175,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={handleLogout}
             className="adm-nav-tooltip-wrap flex items-center justify-center rounded-xl w-full group"
             style={{ padding: '9px 0', transition: 'background 150ms ease' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#FEF2F2'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            onMouseEnter={(e) => { 
+              (e.currentTarget as HTMLElement).style.background = '#FEF2F2'; 
+              const rect = e.currentTarget.getBoundingClientRect();
+              setActiveTooltip({ label: 'Sign Out', top: rect.top + rect.height / 2 });
+            }}
+            onMouseLeave={(e) => { 
+              (e.currentTarget as HTMLElement).style.background = 'transparent'; 
+              setActiveTooltip(null);
+            }}
           >
             <div className="w-8 h-8 rounded-xl flex items-center justify-center">
               <LogOut size={17} style={{ color: '#EF4444' }} />
@@ -267,8 +286,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   >
                     <Bell size={16} />
                     {/* Active Alerts Badge */}
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                    {alerts.length > 0 && (
+                      <>
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                      </>
+                    )}
                   </button>
                   
                   {mounted && notifOpen && (
@@ -282,25 +305,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     >
                       <div className="flex items-center justify-between border-b pb-2 mb-1" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
                         <span className="text-xs font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>System Alerts</span>
-                        <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">3 ACTIVE</span>
+                        <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">
+                          {alerts.length > 0 ? `${alerts.length} ACTIVE` : 'NO ALERTS'}
+                        </span>
                       </div>
                       <div className="space-y-2 max-h-[300px] overflow-y-auto adm-scrollbar pr-1">
-                        {NOTIFICATIONS.map((item) => (
-                          <div key={item.id} className="p-2.5 rounded-xl border flex flex-col gap-0.5 transition-all hover:bg-purple-500/5 cursor-pointer"
-                               style={{ background: 'var(--adm-surface)', borderColor: 'var(--adm-border-solid)' }}>
-                            <div className="flex items-center justify-between">
-                              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                                item.type === 'high' ? 'bg-red-500/10 text-red-500' :
-                                'bg-amber-500/10 text-amber-500'
-                              }`}>
-                                {item.type}
-                              </span>
-                              <span className="text-[9px]" style={{ color: 'var(--adm-text-muted)' }}>{item.time}</span>
+                        {alerts.length > 0 ? (
+                          alerts.map((item) => (
+                            <div key={item.id} className="p-2.5 rounded-xl border flex flex-col gap-0.5 transition-all hover:bg-purple-500/5"
+                                 style={{ background: 'var(--adm-surface)', borderColor: 'var(--adm-border-solid)' }}>
+                              <div className="flex items-center justify-between">
+                                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                                  item.type === 'high' ? 'bg-red-500/10 text-red-500' :
+                                  'bg-amber-500/10 text-amber-500'
+                                }`}>
+                                  {item.type}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px]" style={{ color: 'var(--adm-text-muted)' }}>{item.time}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAlerts(prev => prev.filter(a => a.id !== item.id));
+                                      toast.success('Alert dismissed');
+                                    }}
+                                    className="w-4 h-4 rounded flex items-center justify-center hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors"
+                                    title="Dismiss Alert"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                              </div>
+                              <h4 className="text-xs font-semibold mt-1" style={{ color: 'var(--adm-text)' }}>{item.title}</h4>
+                              <p className="text-[10px]" style={{ color: 'var(--adm-text-muted)' }}>{item.desc}</p>
                             </div>
-                            <h4 className="text-xs font-semibold mt-1" style={{ color: 'var(--adm-text)' }}>{item.title}</h4>
-                            <p className="text-[10px]" style={{ color: 'var(--adm-text-muted)' }}>{item.desc}</p>
+                          ))
+                        ) : (
+                          <div className="py-6 text-center text-xs text-slate-400 space-y-1">
+                            <p className="font-semibold text-emerald-500">✨ All Clear!</p>
+                            <p>No active campus alerts or critical issues.</p>
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
                   )}
@@ -470,6 +515,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </>
         )}
       </AnimatePresence>
+
+      {mounted && activeTooltip && createPortal(
+        <div
+          className="adm-nav-tooltip"
+          style={{
+            position: 'fixed',
+            top: `${activeTooltip.top}px`,
+            right: '90px',
+            transform: 'translateY(-50%) translateX(0) scale(1)',
+            opacity: 1,
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}
+        >
+          {activeTooltip.label}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
