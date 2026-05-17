@@ -65,7 +65,7 @@ export default function NewTopNav() {
       Students: '/teacher/students',
       'AI Insights': '/teacher/ai-insights',
       Interventions: '/teacher/interventions',
-      Assessments: '/teacher/grading',
+      Assessments: '/teacher/ai-content',
       Reports: '/teacher/reports',
       Upload: '/teacher/upload',
       'Help Queue': '/teacher/help-queue',

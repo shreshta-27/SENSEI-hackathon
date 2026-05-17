@@ -9,6 +9,7 @@ import Intervention from '../models/Intervention.js';
 import HelpTicket from '../models/HelpTicket.js';
 import TeacherInsight from '../models/TeacherInsight.js';
 import Poll from '../models/Poll.js';
+import Assignment from '../models/Assignment.js';
 import { getStudentPerformance } from '../services/performance.service.js';
 import { callGemini } from '../services/gemini.service.js';
 import { createNotification } from '../services/notification.service.js';
@@ -419,5 +420,43 @@ export const updateProfile = async (req, res) => {
     res.json({ message: 'Profile updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message, code: 500 });
+  }
+};
+
+export const getAssessments = async (req, res) => {
+  try {
+    const assignments = await Assignment.find({ teacherId: req.user.userId }).sort({ createdAt: -1 });
+    res.json({ assignments });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const createAssessment = async (req, res) => {
+  try {
+    const { title, subject, dueDate, brief } = req.body;
+    const assignment = await Assignment.create({
+      teacherId: req.user.userId,
+      title, subject, brief: brief || 'No description', dueDate,
+      status: 'active'
+    });
+    res.status(201).json({ assignment });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const gradeAssessment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const assignment = await Assignment.findById(id);
+    if (!assignment) return res.status(404).json({ error: 'Not found' });
+    
+    assignment.status = 'graded';
+    await assignment.save();
+    
+    res.json({ success: true, assignment });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

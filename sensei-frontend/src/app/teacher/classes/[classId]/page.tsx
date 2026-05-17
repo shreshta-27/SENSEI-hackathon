@@ -12,7 +12,21 @@ import StickyCard from '@/components/faculty/StickyCard';
 import RiskBadge from '@/components/faculty/RiskBadge';
 import ComicButton from '@/components/faculty/ComicButton';
 import TeacherAvatar from '@/components/faculty/TeacherAvatar';
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Radar, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
+import dynamic from 'next/dynamic';
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
+const RadarChart = dynamic(() => import('recharts').then(m => m.RadarChart), { ssr: false });
+const PolarGrid = dynamic(() => import('recharts').then(m => m.PolarGrid), { ssr: false });
+const PolarAngleAxis = dynamic(() => import('recharts').then(m => m.PolarAngleAxis), { ssr: false });
+const PolarRadiusAxis = dynamic(() => import('recharts').then(m => m.PolarRadiusAxis), { ssr: false });
+const Radar = dynamic(() => import('recharts').then(m => m.Radar), { ssr: false });
+const LineChart = dynamic(() => import('recharts').then(m => m.LineChart), { ssr: false });
+const Line = dynamic(() => import('recharts').then(m => m.Line), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(m => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(m => m.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
+const BarChart = dynamic(() => import('recharts').then(m => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import('recharts').then(m => m.Bar), { ssr: false });
+const CartesianGrid = dynamic(() => import('recharts').then(m => m.CartesianGrid), { ssr: false });
 
 type TabKey = 'overview' | 'students' | 'analytics' | 'upload' | 'interventions';
 
@@ -38,7 +52,12 @@ export default function ClassDetailPage() {
       .catch(() => setData(mockClassData()));
   }, [classId]);
 
-  const c = data ?? mockClassData();
+  const c = data ? { 
+    ...data.class, 
+    students: data.students, 
+    ...data.analytics, 
+    studentCount: data.students?.length 
+  } : mockClassData();
 
   /* ── radar/trend mock data ── */
   const radarData = [
@@ -58,13 +77,36 @@ export default function ClassDetailPage() {
     { name: 'Networks',   score: 85 }, { name: 'OS',      score: 78 },
     { name: 'ML Basics',  score: 88 }, { name: 'Fullstack',score: 82 },
   ];
-  const students = Array.from({ length: 6 }, (_, i) => ({
+  const students = c.students?.length > 0 ? c.students.map((s: any) => {
+    const r = (s.riskLevel || 'low').toLowerCase();
+    const normalizedRisk = ['high', 'medium', 'low'].includes(r) ? r : 'high';
+    return {
+      name: s.name || 'Unknown Student',
+      id: s.studentId || s._id,
+      cgpa: Number(s.cgpa || 0).toFixed(1),
+      attend: Number(s.attendance || 0),
+      risk: normalizedRisk,
+      _id: s._id,
+    };
+  }) : Array.from({ length: 6 }, (_, i) => ({
     name:   `Student ${i + 1}`,
     id:     `${c.department?.slice(0, 2) ?? 'CS'}3${String(i + 1).padStart(2, '0')}`,
     cgpa:   (7 + i * 0.12).toFixed(1),
     attend: 80 + i * 2,
     risk:   (i < 2 ? 'high' : i < 4 ? 'medium' : (i === 5 ? 'low' : 'low')) as any,
+    _id: `mock-${i}`
   }));
+
+  const topStudents = [...students].sort((a: any, b: any) => Number(b.cgpa) - Number(a.cgpa)).slice(0, 5);
+  const atRiskStudents = [...students].filter((s: any) => s.risk === 'high' || s.risk === 'medium').slice(0, 5);
+
+  const cgpas = students.map((s: any) => Number(s.cgpa || 0)).filter((c: any) => c > 0);
+  const realAvgCgpa = cgpas.length > 0 ? (cgpas.reduce((a: number, b: number) => a + b, 0) / cgpas.length).toFixed(1) : '0.0';
+  const passing = students.filter((s: any) => Number(s.cgpa || 0) >= 5.0).length;
+  const realPassRate = students.length > 0 ? Math.round((passing / students.length) * 100) : 0;
+  const attends = students.map((s: any) => Number(s.attend || 0));
+  const realAvgAttendance = attends.length > 0 ? Math.round(attends.reduce((a: number, b: number) => a + b, 0) / attends.length) : 0;
+  const realAtRiskCount = students.filter((s: any) => s.risk === 'high' || s.risk === 'medium').length;
 
   return (
     <div className="page-mobile-pad space-y-6">
@@ -104,10 +146,10 @@ export default function ClassDetailPage() {
             {/* 4 KPI cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Avg CGPA',  value: c.avgCGPA ?? 7.4,  icon: GraduationCap, color: 'yellow' as const },
-                { label: 'Pass Rate', value: `${c.passRate ?? 86}%`, icon: CheckCircle, color: 'green'   as const },
-                { label: 'Attendance', value: `${c.attendance ?? 91}%`, icon: TrendingUp, color: 'blue' as const },
-                { label: 'At Risk',  value: c.atRisk ?? 0,  icon: AlertTriangle, color: 'pink' as const, urgent: (c.atRisk ?? 0) > 5 },
+                { label: 'Avg CGPA',  value: realAvgCgpa,  icon: GraduationCap, color: 'yellow' as const },
+                { label: 'Pass Rate', value: `${realPassRate}%`, icon: CheckCircle, color: 'green'   as const },
+                { label: 'Attendance', value: `${realAvgAttendance}%`, icon: TrendingUp, color: 'blue' as const },
+                { label: 'At Risk',  value: realAtRiskCount,  icon: AlertTriangle, color: 'pink' as const, urgent: realAtRiskCount > 5 },
               ].map((k, i) => (
                 <StickyCard key={k.label} color={k.color} rotation={-0.5 + i * 0.2} className="!p-4">
                   <k.icon size={20} className="text-[var(--text-muted)] mb-2" />
@@ -121,24 +163,30 @@ export default function ClassDetailPage() {
             {/* Top 5 / Needs Attention */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <StickyCard color="green"><h3 className="font-display text-lg mb-3">Top 5 Students</h3>
-                <div className="space-y-2">{[1,2,3,4,5].map(i => (
-                  <div key={i} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
-                    <span className="font-display text-xl text-green-700">{i}</span>
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center font-ui text-xs font-bold text-green-700">{String.fromCharCode(64 + i)}</div>
-                    <span className="font-ui text-sm font-bold text-[var(--text-primary)]">Student {String.fromCharCode(64 + i)}</span>
-                    <span className="ml-auto font-display text-sm text-green-700">{(9.2 - i * 0.1).toFixed(1)}</span>
-                  </div>
-                ))}</div>
+                <div className="space-y-2">
+                  {topStudents.map((s, idx) => (
+                    <div key={s._id || idx} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
+                      <span className="font-display text-xl text-green-700">{idx + 1}</span>
+                      <TeacherAvatar name={s.name} size={32} />
+                      <span className="font-ui text-sm font-bold text-[var(--text-primary)] truncate">{s.name}</span>
+                      <span className="ml-auto font-display text-sm text-green-700">{s.cgpa}</span>
+                    </div>
+                  ))}
+                </div>
               </StickyCard>
               <StickyCard color="pink"><h3 className="font-display text-lg mb-3">Needs Attention</h3>
-                <div className="space-y-2">{[1,2,3,4,5].map(i => (
-                  <div key={i} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
-                    <span className="font-display text-xl text-red-500">{i}</span>
-                    <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center font-ui text-xs font-bold text-red-400">{String.fromCharCode(75 + i)}</div>
-                    <span className="font-ui text-sm font-bold text-[var(--text-primary)]">At Risk Student {i}</span>
-                    <RiskBadge level="medium" />
-                  </div>
-                ))}</div>
+                <div className="space-y-2">
+                  {atRiskStudents.length > 0 ? atRiskStudents.map((s, idx) => (
+                    <div key={s._id || idx} className="flex items-center gap-3 p-2 bg-white/60 rounded-lg">
+                      <span className="font-display text-xl text-red-500">{idx + 1}</span>
+                      <TeacherAvatar name={s.name} size={32} />
+                      <span className="font-ui text-sm font-bold text-[var(--text-primary)] truncate">{s.name}</span>
+                      <RiskBadge level={s.risk} />
+                    </div>
+                  )) : (
+                    <div className="py-8 text-center font-handwrite text-sm text-[var(--text-muted)]">No students at risk! 🎉</div>
+                  )}
+                </div>
               </StickyCard>
             </div>
 
@@ -149,14 +197,14 @@ export default function ClassDetailPage() {
                 <thead>
                   <tr className="text-[var(--text-muted)] text-xs uppercase tracking-wider">
                     <th className="text-left py-2 px-3">Student</th>
-                    {subjData.map(s => <th key={s.name} className="text-center py-2 px-2 min-w-[60px]">{s.name}</th>)}
+                    {subjData.map((s: any) => <th key={s.name} className="text-center py-2 px-2 min-w-[60px]">{s.name}</th>)}
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: 6 }).map((_, ri) => (
-                    <tr key={ri} className="border-t border-[var(--border-card)]">
-                      <td className="py-2 px-3 font-bold text-[var(--text-primary)]">S{ri + 1}</td>
-                      {subjData.map((sc, ci) => {
+                  {students.slice(0, 6).map((s: any, ri: number) => (
+                    <tr key={s._id || ri} className="border-t border-[var(--border-card)]">
+                      <td className="py-2 px-3 font-bold text-[var(--text-primary)] truncate max-w-[120px]">{s.name}</td>
+                      {subjData.map((sc: any, ci: number) => {
                         const score = 40 + Math.floor(Math.random() * 55);
                         const bg = score >= 75 ? 'bg-green-100 text-green-700' : score >= 55 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-500';
                         return <td key={ci} className="py-2 px-2">
@@ -183,7 +231,7 @@ export default function ClassDetailPage() {
               ))}
             </div>
             <div className="space-y-3">
-              {students.map((s, i) => (
+              {students.map((s: any, i: number) => (
                 <div key={i} className="flex items-center gap-4 p-3 bg-white border-2 border-[var(--border-card)] rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all">
                   <TeacherAvatar name={s.name} size={38} />
                   <div className="flex-1 min-w-0">
@@ -194,7 +242,7 @@ export default function ClassDetailPage() {
                     </div>
                     <p className="font-ui text-xs text-[var(--text-muted)]">CGPA: {s.cgpa} · Att: {s.attend}%</p>
                   </div>
-                  <button onClick={() => router.push(`/teacher/students/${s.id}`)}
+                  <button onClick={() => router.push(`/teacher/students/${s._id}`)}
                     className="px-4 py-1.5 font-ui text-xs font-bold text-[var(--accent-purple)] border-2 border-[var(--accent-purple)] rounded-xl hover:bg-[var(--accent-purple)]/5">
                     Profile
                   </button>
@@ -260,7 +308,7 @@ export default function ClassDetailPage() {
               <ComicButton variant="primary" icon={<FileText size={16} />}>Browse Files</ComicButton>
               {showPipe ? (
                 <div className="mt-6 text-left space-y-3">
-                  {pipeline.map((st, i) => (
+                  {pipeline.map((st: any, i: number) => (
                     <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border-2 ${st.done ? 'bg-[var(--sticky-green)] border-green-400 text-green-800' : st.running ? 'bg-white border-amber-400 animate-pulse' : 'bg-gray-50 border-gray-200 text-[var(--text-muted)]'}`}>
                       <span className="text-xl">{st.emoji}</span>
                       <div className="flex-1">
@@ -288,7 +336,7 @@ export default function ClassDetailPage() {
             {[
               { student: 'Rahul Verma', type: 'Academic',   urgency: 'High', desc: 'Performance drop in DS Algo', date: '2 days ago' },
               { student: 'Sneha Iyer',  type: 'Attendance', urgency: 'Medium', desc: 'Below 75% attendance',      date: '5 days ago' },
-            ].map((iv, i) => (
+            ].map((iv: any, i: number) => (
               <StickyCard key={i} color={i === 0 ? 'pink' : 'yellow'} className="!p-4">
                 <div className="flex items-start justify-between">
                   <div>

@@ -65,17 +65,19 @@ export const respondToTicket = async (req, res) => {
 
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-    await createNotification(ticket.studentId._id, {
-      type: 'info',
-      title: 'Help Ticket Responded',
-      message: `A teacher responded to your help ticket.`,
-      link: '/student/help-desk'
-    });
+    if (ticket.studentId) {
+      await createNotification(ticket.studentId._id, {
+        type: 'info',
+        title: 'Help Ticket Responded',
+        message: `A teacher responded to your help ticket.`,
+        link: '/student/help-desk'
+      });
 
-    try {
-      const io = getIO();
-      io.of('/student').to(ticket.studentId._id.toString()).emit('help:ticket_updated', ticket);
-    } catch (e) {}
+      try {
+        const io = getIO();
+        io.of('/student').to(ticket.studentId._id.toString()).emit('help:ticket_updated', ticket);
+      } catch (e) {}
+    }
 
     res.json(ticket);
   } catch (error) {
@@ -93,10 +95,12 @@ export const resolveTicket = async (req, res) => {
 
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-    try {
-      const io = getIO();
-      io.of('/student').to(ticket.studentId._id.toString()).emit('help:ticket_updated', ticket);
-    } catch (e) {}
+    if (ticket.studentId) {
+      try {
+        const io = getIO();
+        io.of('/student').to(ticket.studentId._id.toString()).emit('help:ticket_updated', ticket);
+      } catch (e) {}
+    }
 
     res.json(ticket);
   } catch (error) {

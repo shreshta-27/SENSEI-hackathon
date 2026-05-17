@@ -28,6 +28,11 @@ router.get('/alerts/draft', ctrl.draftAlert);
 router.post('/alerts/send', ctrl.sendAlert);
 router.get('/effectiveness', ctrl.getEffectiveness);
 router.post('/content-ai/generate', ctrl.generateContent);
+
+// Assessment endpoints
+router.get('/assessments', ctrl.getAssessments);
+router.post('/assessments', ctrl.createAssessment);
+router.post('/assessments/:id/grade', ctrl.gradeAssessment);
 router.put('/profile', ctrl.updateProfile);
 
 export default router;

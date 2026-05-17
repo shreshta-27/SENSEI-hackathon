@@ -15,13 +15,14 @@ const map: Record<RiskLevel, { bg: string; text: string; label: string }> = {
 };
 
 export default function RiskBadge({ level, label: propLabel }: RiskBadgeProps) {
-  const { bg, text, label } = map[level];
+  const safeLevel = map[level] ? level : 'high';
+  const { bg, text, label } = map[safeLevel];
   return (
     <span
       className="inline-flex items-center px-2.5 py-1 rounded-full font-ui text-[11px] font-bold border border-current/15"
       style={{ background: bg, color: text }}
     >
-      {propLabel || label}
+      {propLabel || (level !== safeLevel ? level : label)}
     </span>
   );
 }

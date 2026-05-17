@@ -24,7 +24,7 @@ const navItems = [
   { href: '/teacher/students', icon: Users, label: 'Students' },
   { href: '/teacher/ai-insights', icon: BrainCircuit, label: 'AI Insights' },
   { href: '/teacher/interventions', icon: AlertTriangle, label: 'Interventions' },
-  { href: '/teacher/grading', icon: FileText, label: 'Assessments' },
+  { href: '/teacher/ai-content', icon: FileText, label: 'Assessments' },
   { href: '/teacher/reports', icon: BarChart3Icon, label: 'Reports' },
   { href: '/teacher/upload', icon: Upload, label: 'Upload Marks' },
   { href: '/teacher/help-queue', icon: Activity, label: 'Help Queue' },
