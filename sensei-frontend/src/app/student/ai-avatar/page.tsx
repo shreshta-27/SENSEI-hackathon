@@ -75,20 +75,31 @@ export default function AIAvatarChatbotPage() {
 
   const toggleListening = useCallback(() => {
     if (isListening) {
-      recognitionRef.current?.stop();
+      try {
+        recognitionRef.current?.stop();
+      } catch (e) {
+        console.error('Speech recognition stop error:', e);
+      }
       setIsListening(false);
     } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error('Speech recognition start error:', e);
+        setIsListening(true);
+      }
     }
   }, [isListening]);
 
   const speakText = useCallback(async (text: string) => {
     if (!isSpeaking || typeof window === 'undefined') return;
     
-
     try {
-      const utterance = new SpeechSynthesisUtterance(text.replace(/[#*_`]/g, ''));
+      // Use dynamic RegExp to bypass TypeScript's ES5 target check (TS1501 error)
+      const emojiRegex = new RegExp('[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]', 'gu');
+      const cleanText = text.replace(/[#*_`]/g, '').replace(emojiRegex, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       
       const vList = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
       const femaleVoice = vList.find(v => 

@@ -59,24 +59,24 @@ function CustomAvatar({ mood }: AvatarProps) {
     };
 
     // Visemes: A, E, I, O, U, F/V, L, M/B/P, W/Q
-    vMap['A'] = findMorph(['aa', 'mth_a', 'mouth_a', 'moutha']);
-    vMap['E'] = findMorph(['ee', 'mth_e', 'mouth_e', 'mouthe']);
-    vMap['I'] = findMorph(['ih', 'mth_i', 'mouth_i', 'mouthi']);
-    vMap['O'] = findMorph(['oh', 'mth_o', 'mouth_o', 'moutho']);
-    vMap['U'] = findMorph(['ou', 'mth_u', 'mouth_u', 'mouthu']);
-    vMap['FV'] = findMorph(['ff', 'mth_v', 'mouth_v']);
-    vMap['L'] = findMorph(['nn', 'mth_l', 'mouth_l']);
-    vMap['MBP'] = findMorph(['pp', 'mth_p', 'mouth_p', 'mouthclosed']);
-    vMap['WQ'] = findMorph(['rr', 'mth_w', 'mouth_w']);
+    vMap['A'] = findMorph(['aa', 'mth_a', 'mouth_a', 'moutha', 'viseme_a', 'mouthopen', 'jawopen']);
+    vMap['E'] = findMorph(['ee', 'mth_e', 'mouth_e', 'mouthe', 'viseme_e', 'mouthsmile']);
+    vMap['I'] = findMorph(['ih', 'mth_i', 'mouth_i', 'mouthi', 'viseme_i']);
+    vMap['O'] = findMorph(['oh', 'mth_o', 'mouth_o', 'moutho', 'viseme_o', 'mouthfunnel']);
+    vMap['U'] = findMorph(['ou', 'mth_u', 'mouth_u', 'mouthu', 'viseme_u', 'mouthpucker']);
+    vMap['FV'] = findMorph(['ff', 'mth_v', 'mouth_v', 'viseme_ff', 'viseme_v']);
+    vMap['L'] = findMorph(['nn', 'mth_l', 'mouth_l', 'viseme_nn', 'viseme_l', 'tongue']);
+    vMap['MBP'] = findMorph(['pp', 'mth_p', 'mouth_p', 'mouthclosed', 'viseme_pp', 'viseme_m']);
+    vMap['WQ'] = findMorph(['rr', 'mth_w', 'mouth_w', 'viseme_rr', 'viseme_w']);
 
     // Expressions
-    eMap['blink_l'] = findMorph(['blink_l', 'eye_close_l']);
-    eMap['blink_r'] = findMorph(['blink_r', 'eye_close_r']);
-    eMap['blink'] = findMorph(['blink', 'eye_close', 'close']);
+    eMap['blink_l'] = findMorph(['blink_l', 'eye_close_l', 'eyeblinkleft']);
+    eMap['blink_r'] = findMorph(['blink_r', 'eye_close_r', 'eyeblinkright']);
+    eMap['blink'] = findMorph(['blink', 'eye_close', 'close', 'eyesclosed']);
     
-    eMap['happy'] = findMorph(['joy', 'smile', 'happy', 'fun']);
-    eMap['sad'] = findMorph(['sorrow', 'sad', 'frown']);
-    eMap['confused'] = findMorph(['surprised', 'confused', 'shock']);
+    eMap['happy'] = findMorph(['joy', 'smile', 'happy', 'fun', 'mouthsmile']);
+    eMap['sad'] = findMorph(['sorrow', 'sad', 'frown', 'mouthfrown']);
+    eMap['confused'] = findMorph(['surprised', 'confused', 'shock', 'browsup']);
     eMap['thinking'] = findMorph(['natural', 'neutral']);
 
     return { visemeMap: vMap, expressionMap: eMap };
@@ -134,35 +134,29 @@ function CustomAvatar({ mood }: AvatarProps) {
     // 1. BLINKING, FACIAL EXPRESSIONS & LIP-SYNC (MORPH TARGETS)
     // --------------------------------------------------------
     
-    // First, gradually reset all known influences to 0 (unless set below)
-    faceMeshes.forEach(mesh => {
-      if (mesh.morphTargetInfluences) {
-        for (let i = 0; i < mesh.morphTargetInfluences.length; i++) {
-          mesh.morphTargetInfluences[i] = THREE.MathUtils.lerp(mesh.morphTargetInfluences[i], 0, delta * 12);
-        }
-      }
-    });
-
+    // We will track target values for ONLY the morphs we explicitly control
+    const morphTargets = new Map<{mesh: THREE.SkinnedMesh, index: number}, number>();
+    
     const setMorph = (morph: { mesh: THREE.SkinnedMesh, index: number } | null, value: number) => {
-      if (morph && morph.mesh.morphTargetInfluences) {
-        // We directly set the value instead of lerping here because we reset everything above,
-        // so we lerp the value itself and apply it directly
-        morph.mesh.morphTargetInfluences[morph.index] = value;
-      }
+      if (morph) morphTargets.set(morph, value);
     };
+
+    // Initialize all mapped morphs to 0
+    Object.values(visemeMap).forEach(m => setMorph(m, 0));
+    Object.values(expressionMap).forEach(m => setMorph(m, 0));
 
     // Blinking logic
     blinkRef.current.timer -= delta;
     if (blinkRef.current.timer <= 0) {
       if (blinkRef.current.target === 0) {
         blinkRef.current.target = 1; // Close eye
-        blinkRef.current.timer = 0.15; // Keep closed for 150ms
+        blinkRef.current.timer = 0.1; // 100ms blink
       } else {
         blinkRef.current.target = 0; // Open eye
-        blinkRef.current.timer = Math.random() * 4 + 2;
+        blinkRef.current.timer = Math.random() * 3 + 2;
       }
     }
-    blinkRef.current.val = THREE.MathUtils.lerp(blinkRef.current.val, blinkRef.current.target, delta * 25);
+    blinkRef.current.val = THREE.MathUtils.lerp(blinkRef.current.val, blinkRef.current.target, delta * 30);
     
     setMorph(expressionMap['blink'], blinkRef.current.val);
     setMorph(expressionMap['blink_l'], blinkRef.current.val);
@@ -178,8 +172,7 @@ function CustomAvatar({ mood }: AvatarProps) {
       }
       const vKey = lipSyncRef.current.currentViseme;
       if (vKey !== 'None' && visemeMap[vKey]) {
-        // We set it to 1.0 directly. The fast timer handles the "snappy" speech feel naturally
-        setMorph(visemeMap[vKey], 0.8 + Math.random() * 0.2);
+        setMorph(visemeMap[vKey], 1.0);
       }
     }
 
@@ -189,6 +182,31 @@ function CustomAvatar({ mood }: AvatarProps) {
     else if (mood === 'sad') setMorph(expressionMap['sad'], 0.8);
     else if (mood === 'confused') setMorph(expressionMap['confused'], 0.7);
     else if (mood === 'waving') setMorph(expressionMap['happy'], 0.6);
+
+    // Smoothly apply our mapped morph targets without affecting unmapped ones
+    morphTargets.forEach((targetValue, morph) => {
+      if (morph && morph.mesh.morphTargetInfluences) {
+        morph.mesh.morphTargetInfluences[morph.index] = THREE.MathUtils.lerp(
+          morph.mesh.morphTargetInfluences[morph.index], 
+          targetValue, 
+          delta * 15
+        );
+      }
+    });
+
+    // Jaw Fallback Animation (in case visemes don't exist, we still want jaw movement)
+    const jawBone = Object.values(bones).find(b => b.name.toLowerCase().includes('jaw') || b.name.toLowerCase().includes('mouth'));
+    if (jawBone) {
+      if (mood === 'talking') {
+        const targetJawOpen = (Math.sin(t * 15) > 0) ? 0.2 : 0;
+        // Rotate on X and Z to cover different rigging standards
+        jawBone.rotation.x = THREE.MathUtils.lerp(jawBone.rotation.x, targetJawOpen, delta * 20);
+        jawBone.rotation.z = THREE.MathUtils.lerp(jawBone.rotation.z, targetJawOpen * 0.5, delta * 20);
+      } else {
+        jawBone.rotation.x = THREE.MathUtils.lerp(jawBone.rotation.x, 0, delta * 10);
+        jawBone.rotation.z = THREE.MathUtils.lerp(jawBone.rotation.z, 0, delta * 10);
+      }
+    }
 
     // --------------------------------------------------------
     // 2. PROCEDURAL BONE ANIMATIONS (Continuous Movement)
@@ -365,7 +383,7 @@ export default function Avatar3DScene({ mood }: AvatarProps) {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 0.8, 4.5], fov: 45 }}
+      camera={{ position: [0, 0.3, 5.5], fov: 45 }}
       style={{ width: '100%', height: '100%' }}
       gl={{ antialias: true, alpha: true }}
     >
@@ -394,7 +412,7 @@ export default function Avatar3DScene({ mood }: AvatarProps) {
           enablePan={false}
           minPolarAngle={Math.PI / 4}
           maxPolarAngle={Math.PI / 2.2}
-          target={[0, -0.2, 0]}
+          target={[0, -0.6, 0]}
           autoRotate={false}
         />
       </Suspense>

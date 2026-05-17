@@ -8,6 +8,7 @@ import {
   useTransform,
   AnimatePresence,
 } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import {
   Brain,
   BookOpen,
@@ -28,6 +29,10 @@ import {
   Building2,
 } from 'lucide-react';
 
+const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), {
+  ssr: false,
+});
+
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const PURPLE      = '#7B4FE9';
 const PURPLE_DARK = '#5B35C4';
@@ -40,6 +45,8 @@ const NOTE_GREEN    = '#81D4A8';
 const NOTE_LAVENDER = '#C9A0FF';
 const NOTE_BLUE     = '#81D4FA';
 const NOTE_PEACH    = '#FFB74D';
+
+const CUBIC_BEZIER: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
 
 // ─── AnimatedCounter ──────────────────────────────────────────────────────────
 function AnimatedCounter({ target, suffix = '', isStatic = false }: { target: number; suffix?: string; isStatic?: boolean }) {
@@ -107,7 +114,7 @@ function FloatingLabel({ label, color, Icon, posStyle, delay = 0, rotate = 0 }: 
       style={{ ...posStyle, width: 'max-content', zIndex: 10 }}
       initial={{ opacity: 0, scale: 0.7, y: 16 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay, duration: 0.65, ease: [0.34, 1.56, 0.64, 1] }}
+      transition={{ delay, duration: 0.65, ease: CUBIC_BEZIER }}
     >
       <motion.div
         animate={{ y: [0, -7, 0] }}
@@ -188,7 +195,7 @@ export default function LandingPage() {
     { icon: Shield,        color: '#2E7D32', bg: '#E8F5E9', title: 'For Admins',   desc: 'System-wide analytics and AI-powered risk insights.', features: ['University Dashboard', 'Dropout Risk Prediction', 'Performance Analytics', 'Intervention Management', 'Department Reports'] },
   ];
 
-  const fadeUp = { hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number] } } };
+  const fadeUp = { hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: CUBIC_BEZIER } } };
   const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.12 } } };
 
   return (
@@ -272,7 +279,9 @@ export default function LandingPage() {
         position: 'relative',
         overflow: 'hidden',
         background: '#F5EFE8',
+        zIndex: 0,
       }}>
+        <ParticleBackground />
         {/* polka dot texture */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -299,9 +308,9 @@ export default function LandingPage() {
               {/* headline - animated word-by-word */}
               <motion.div variants={fadeUp} style={{ marginBottom: '1.25rem' }}>
                 <motion.h1 style={{ fontSize: 'clamp(2.6rem, 5.5vw, 4.5rem)', fontWeight: 900, lineHeight: 1.1, color: NAVY, fontFamily: "'Raleway', sans-serif" }}>
-                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block', marginRight: '0.3em' }}>The</motion.span>
-                  <motion.span initial={{ opacity: 0, scale: 0.5, rotate: -8 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, scale: 0.5, rotate: -8 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block', position: 'relative', color: PURPLE, fontStyle: 'italic', marginRight: '0.15em' }}>
                     AI
                     <motion.svg viewBox="0 0 52 34" style={{ position: 'absolute', left: -10, top: -8, width: 'calc(100% + 20px)', height: 'calc(100% + 18px)', overflow: 'visible' }} fill="none">
@@ -309,15 +318,15 @@ export default function LandingPage() {
                         initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2, delay: 0.8 }} />
                     </motion.svg>
                   </motion.span>{' '}
-                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block' }}>Operating</motion.span>
                   <br />
-                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block', marginRight: '0.3em' }}>System</motion.span>
-                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.7, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block' }}>for</motion.span>
                   <br />
-                  <motion.span initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
+                  <motion.span initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.85, ease: CUBIC_BEZIER }}
                     style={{ display: 'inline-block', color: PURPLE }}>
                     Modern Campuses
                   </motion.span>
@@ -389,7 +398,7 @@ export default function LandingPage() {
             <div className="hidden lg:block" style={{ position: 'relative', height: 600 }}>
               {/* central campus card - DEAD CENTER */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
+                initial={{ opacity: 0, scale: 0.8, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 1, ease: CUBIC_BEZIER }}
                 style={{ position: 'absolute', top: '46%', left: '44%', transform: 'translate(-50%, -50%)', zIndex: 5 }}
               >
                 <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}>
@@ -449,7 +458,10 @@ export default function LandingPage() {
         borderBottom: '2px dashed rgba(0,0,0,0.09)',
         padding: '2.75rem 1.5rem',
         position: 'relative',
+        overflow: 'hidden',
+        zIndex: 0,
       }}>
+        <ParticleBackground />
         <span style={{ position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)', fontSize: '1.5rem', opacity: 0.2, pointerEvents: 'none' }}>☆</span>
         <span style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', fontSize: '1.1rem', opacity: 0.2, pointerEvents: 'none' }}>😊</span>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '2rem', textAlign: 'center' }}>
@@ -465,7 +477,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHY CHOOSE SENSEI ── */}
-      <section style={{ background: '#FFFCF4', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ background: '#FFFCF4', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         {/* decorative doodles */}
         <motion.span animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} style={{ position: 'absolute', top: 30, right: 40, fontSize: '2rem', opacity: 0.15, pointerEvents: 'none' }}>✦</motion.span>
         <motion.span animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', bottom: 40, left: 30, fontSize: '1.5rem', opacity: 0.2, pointerEvents: 'none' }}>📎</motion.span>
@@ -506,7 +519,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW SENSEI WORKS (dark) ── */}
-      <section style={{ background: '#111111', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ background: '#111111', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         {/* chalkboard texture */}
         <div style={{ position: 'absolute', inset: 0, opacity: 0.025, backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", pointerEvents: 'none' }} />
         {/* hand-drawn decorations */}
@@ -582,7 +596,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── ONE PLATFORM ── */}
-      <section id="section-solutions" style={{ background: CREAM, padding: '5rem 1.5rem' }}>
+      <section id="section-solutions" style={{ background: CREAM, padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
             <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: NAVY, letterSpacing: '0.03em', fontFamily: "'Raleway', sans-serif" }}>
@@ -626,7 +641,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── ROLES ── */}
-      <section id="section-about-us" style={{ background: '#FAF6FF', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section id="section-about-us" style={{ background: '#FAF6FF', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 300, background: 'rgba(123,79,233,0.04)', borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
@@ -668,7 +684,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── SMART FEATURES ── */}
-      <section id="section-pricing" style={{ background: CREAM, padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section id="section-pricing" style={{ background: CREAM, padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         <div style={{ position: 'absolute', top: 28, left: 18, color: PURPLE, fontSize: '2.2rem', opacity: 0.25, transform: 'rotate(-20deg)', pointerEvents: 'none' }}>→</div>
         <motion.span animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', top: 50, right: 60, fontSize: '1.8rem', opacity: 0.18, pointerEvents: 'none' }}>📌</motion.span>
         <motion.span animate={{ rotate: [0, 10, -5, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', bottom: 50, left: '50%', fontSize: '1.5rem', opacity: 0.12, pointerEvents: 'none' }}>✏️</motion.span>
@@ -700,7 +717,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── AI SENSEI METRICS ── */}
-      <section style={{ background: '#FAF6FF', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ background: '#FAF6FF', padding: '5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
             <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.4em', color: PURPLE, marginBottom: '0.875rem', textTransform: 'uppercase' }}>GUIDED BY TRUE INTELLIGENCE</p>
@@ -733,7 +751,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section id="section-contact" style={{ background: 'linear-gradient(135deg,#150D2B 0%,#1E1140 50%,#150D2B 100%)', padding: '5.5rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
+      <section id="section-contact" style={{ background: 'linear-gradient(135deg,#150D2B 0%,#1E1140 50%,#150D2B 100%)', padding: '5.5rem 1.5rem', position: 'relative', overflow: 'hidden', zIndex: 0 }}>
+        <ParticleBackground />
         {/* animated stars */}
         {[{ l:'12%',t:'18px',c:'#FFD700'},{l:'22%',t:'44px',c:'#7B4FE9'},{l:'80%',t:'28px',c:'#FFD700'},{l:'88%',t:'54px',c:'#4CAF50'},{l:'50%',t:'12px',c:'#fff'},{l:'35%',t:'80%',c:'#FFD700'},{l:'65%',t:'85%',c:'#7B4FE9'}].map((s,i) => (
           <motion.span key={i} animate={{ scale:[1,1.4,1], opacity:[0.5,0.9,0.5] }} transition={{ duration:2+i*0.4, repeat:Infinity, ease:'easeInOut', delay:i*0.3 }}
